@@ -94,18 +94,34 @@
 
         var tooltipEl = document.getElementById('chart-tooltip');
         var currentMode = 'MRR';
-        function externalTooltip(context) {
-          var tooltip = context.tooltip;
-          if (!tooltip) return;
-          if (tooltip.opacity === 0) { tooltipEl.style.display = 'none'; return; }
-          var title = tooltip.title && tooltip.title[0] ? tooltip.title[0] : '';
-          var bodyLines = tooltip.body ? tooltip.body.map(b => b.lines).flat() : [];
-          var rows = bodyLines.map(function(line){ return '<div class="tt-row">'+line+'</div>'; }).join('');
-          tooltipEl.innerHTML = '<div class="tt-card"><div class="tt-header">MRR Breakdown<span class="tt-date">'+title+'</span></div><div class="tt-body">'+rows+'</div></div>';
+        // Chart.js v2 external tooltip (this == chart instance)
+        function externalTooltip(tooltipModel) {
+          if (!tooltipModel) return;
+          if (tooltipModel.opacity === 0) { tooltipEl.style.display = 'none'; return; }
+          var chartRef = this._chart || this.chart; // v2 uses _chart
+          if (!chartRef) return;
+
+          var data = chartRef.data || {};
+          var title = (tooltipModel.title && tooltipModel.title[0]) ? tooltipModel.title[0] : '';
+          var points = tooltipModel.dataPoints || [];
+          var net = 0;
+          var rows = points.map(function(p){
+            var ds = (data.datasets || [])[p.datasetIndex] || {};
+            var color = ds.backgroundColor || '#999';
+            var label = ds.label || '';
+            var value = (ds.data || [])[p.index] || 0;
+            var num = (typeof value === 'number') ? value : parseFloat(value) || 0;
+            net += num;
+            return '<div class="tt-row"><span class="dot" style="--c:'+color+'"></span><span class="tt-label">'+label+'</span><span class="tt-val">$'+num.toLocaleString()+'</span></div>';
+          }).join('');
+          var netRow = '<div class="tt-row tt-net"><span class="dot" style="--c:#c0392b"></span><span class="tt-label">NET MRR</span><span class="tt-val">$'+net.toLocaleString()+'</span></div>';
+          tooltipEl.innerHTML = '<div class="tt-card"><div class="tt-header">MRR Breakdown<span class="tt-date">'+title+'</span></div><div class="tt-body">'+rows+'</div><div class="tt-divider"></div>'+netRow+'</div>';
           tooltipEl.style.display = 'block';
-          var rect = context.chart.canvas.getBoundingClientRect();
-          tooltipEl.style.left = rect.left + window.pageXOffset + tooltip.caretX - 150 + 'px';
-          tooltipEl.style.top  = rect.top  + window.pageYOffset + tooltip.caretY - 160 + 'px';
+          var rect = chartRef.canvas.getBoundingClientRect();
+          var left = rect.left + (tooltipModel.caretX || 0) - 170;
+          var top  = rect.top  + (tooltipModel.caretY || 0) - 220;
+          tooltipEl.style.left = left + 'px';
+          tooltipEl.style.top  = top + 'px';
         }
 
         var chart = new Chart(ctx, {
@@ -133,6 +149,8 @@
                       return label + '  $' + value.toLocaleString();
                     }
                 }},
+                hover: { mode: 'index', intersect: false },
+                events: ['mousemove','mouseout','click','touchstart','touchmove'],
                 scales: {
                     xAxes: [{
                         stacked: true,
