@@ -41,7 +41,7 @@
                         <div class="metric"><div class="label">Reactivations</div><div class="value">$10,000</div></div>
                         <div class="metric"><div class="label">Existing</div><div class="value">$10,000</div></div>
                         <div class="metric"><div class="label">Churn</div><div class="value">$100</div></div>
-                    </div>
+                </div>
                     <div class="legend-row mt-2">
                         <span class="dot" style="--c:#c0392b"></span> Total MRR
                         <span class="dot" style="--c:#5468ff"></span> New MRP

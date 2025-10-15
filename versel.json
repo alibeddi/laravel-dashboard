@@ -1,0 +1,16 @@
+{
+    "version": 2,
+    "outputDirectory": "public",
+    "functions": {
+        "api/index.php": {
+            "runtime": "vercel-php@0.6.2"
+        }
+    },
+    "routes": [
+        {
+            "src": "/(.*)",
+            "dest": "api/index.php"
+        }
+    ],
+    "buildCommand": "composer install --no-dev --prefer-dist --optimize-autoloader && npm ci && npm run build"
+}
